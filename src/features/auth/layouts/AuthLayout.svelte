@@ -12,7 +12,7 @@
 </script>
 
 <div class="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-  <section class="hidden flex-col justify-between bg-ink-800 p-12 text-white lg:flex">
+  <aside aria-label="Tentang Delcom Courses" class="hidden flex-col justify-between bg-ink-800 p-12 text-white lg:flex">
     <Logo dark />
     <div class="max-w-md">
       <h2 class="text-3xl leading-tight font-bold">Belajar lewat video, kapan saja.</h2>
@@ -27,7 +27,7 @@
       </ul>
     </div>
     <p class="text-xs text-ink-300">Delcom Courses &middot; Praktikum PABWE 2026</p>
-  </section>
+  </aside>
 
   <main class="flex items-center justify-center p-6 sm:p-12">
     <div class="w-full max-w-sm">

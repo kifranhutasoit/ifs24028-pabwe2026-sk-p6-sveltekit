@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
                 port: port,
               },
             }),
+        inlineStyleThreshold: 20000,
       }),
       tailwindcss(),
       svelteTesting(),

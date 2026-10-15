@@ -21,22 +21,24 @@
   aria-label="Menu samping"
   data-open={open}
 >
-  <ul class="space-y-1 px-3">
-    {#each items as item (item.href)}
-      {@const Icon = item.icon}
-      <li>
-        <a
-          href={item.href}
-          onclick={onnavigate}
-          aria-current={isActive(item.href) ? "page" : undefined}
-          class={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-            isActive(item.href) ? "bg-ink-800 text-white" : "text-ink-700 hover:bg-ink-100"
-          }`}
-        >
-          <Icon size={18} />
-          <span>{item.label}</span>
-        </a>
-      </li>
-    {/each}
-  </ul>
+  <nav aria-label="Menu utama">
+    <ul class="space-y-1 px-3">
+      {#each items as item (item.href)}
+        {@const Icon = item.icon}
+        <li>
+          <a
+            href={item.href}
+            onclick={onnavigate}
+            aria-current={isActive(item.href) ? "page" : undefined}
+            class={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+              isActive(item.href) ? "bg-ink-800 text-white" : "text-ink-700 hover:bg-ink-100"
+            }`}
+          >
+            <Icon size={18} />
+            <span>{item.label}</span>
+          </a>
+        </li>
+      {/each}
+    </ul>
+  </nav>
 </aside>
