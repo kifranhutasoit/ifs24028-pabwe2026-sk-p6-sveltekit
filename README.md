@@ -2,9 +2,11 @@
 
 Aplikasi **Delcom Courses** dibangun menggunakan **SvelteKit (Svelte 5)**, **TypeScript**, dan **Tailwind CSS** untuk Praktikum 6 Pemrograman Aplikasi Berbasis Web (PABWE) 2026.
 
+**Pembuat**: Kifran Hutasoit (ifs24028)
+
 ## 🌐 Live URL & Deployment
-- **Production URL**: [https://ifs24028-pabwe2026-sk-p6-sveltekit](https://ifs24023-pabwe2026-sk-p6-sveltekit.yogitrim.my.id)
-- **Deployed on**: Private Home Server via Bun, Systemd Service, & Cloudflare Tunnel
+- **Production URL**: [https://ifs24028-pabwe2026-sk-p6-sveltekit.vercel.app](https://ifs24028-pabwe2026-sk-p6-sveltekit.vercel.app)
+- **Deployed on**: [Vercel](https://vercel.com/) (deploy otomatis setiap `git push` ke branch `main`)
 
 ## 🚀 Fitur Utama
 1. **Autentikasi Pengguna & Sesi**:
@@ -46,7 +48,17 @@ bun run dev
 # 4. Menjalankan pengujian coverage (100% coverage)
 bun run test:coverage
 
-# 5. Build dan jalankan mode produksi
+# 5. Build dan pratinjau mode produksi
 bun run build
-bun start
+bun run preview
 ```
+
+## ☁️ Deployment ke Vercel
+
+1. Push repositori `ifs24028-pabwe2026-sk-p6-sveltekit` ke GitHub.
+2. Di dashboard Vercel, pilih **Add New → Project**, lalu impor repositori tersebut.
+3. Framework Preset: **SvelteKit** (terdeteksi otomatis).
+4. Di **Settings → Environment Variables**, isi variabel yang sama dengan `.env.example` (untuk environment **Production**).
+5. Klik **Deploy**. Setiap `git push` ke branch `main` akan memicu deploy ulang secara otomatis.
+
+> Catatan: Vercel memerlukan adapter `@sveltejs/adapter-vercel` (atau `@sveltejs/adapter-auto`) pada `svelte.config.js`.
