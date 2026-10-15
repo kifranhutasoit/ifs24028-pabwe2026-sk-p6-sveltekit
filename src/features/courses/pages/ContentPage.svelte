@@ -1,187 +1,96 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { goto } from "$app/navigation";
-  import { page } from "$app/state";
-  import { coursesStore } from "../states/coursesStore";
+  import { untrack } from "svelte";
+  import { ArrowLeft, Check, Lock, Video } from "lucide-svelte";
+  import { getYoutubeId } from "../../../helpers/toolsHelper";
+  import { authStore } from "../../auth/states/authStore";
   import {
-    ArrowLeft,
-    CheckCircle2,
-    Circle,
-    ChevronLeft,
-    ChevronRight,
-    LoaderCircle,
-  } from "lucide-svelte";
-  import type { CourseContent } from "../api/courseApi";
+    clearMutations,
+    coursesStore,
+    loadContent,
+    loadCourse,
+    setContentStatus,
+  } from "../states/coursesStore";
 
-  export let courseId: string | number | null = null;
-  export let contentId: string | number | null = null;
+  let { courseId, contentId }: { courseId: number; contentId: number } = $props();
 
-  let activeCourseId: string | number | null = null;
-  let activeContentId: string | number | null = null;
+  const course = $derived($coursesStore.course?.id === courseId ? $coursesStore.course : null);
+  const content = $derived($coursesStore.content?.id === contentId ? $coursesStore.content : null);
+  const myId = $derived($authStore.profile?.id);
+  const isOwner = $derived(course !== null && course.user_id === myId);
+  const isStudent = $derived(course !== null && course.students.includes(myId as number));
 
-  $: course = $coursesStore.course;
-  $: content = $coursesStore.courseContent;
-
-  $: {
-    const cId = courseId || page?.params?.courseId || null;
-    const ctId = contentId || page?.params?.contentId || null;
-    activeCourseId = cId;
-    activeContentId = ctId;
+  function reload() {
+    untrack(() => {
+      void loadCourse(courseId);
+      void loadContent(contentId);
+    });
   }
 
-  onMount(() => {
-    if (activeCourseId) {
-      coursesStore.asyncSetCourse(activeCourseId);
-    }
-    if (activeContentId) {
-      coursesStore.asyncSetCourseContent(activeContentId);
-    }
+  $effect(() => {
+    void courseId;
+    void contentId;
+    reload();
   });
 
-  $: if ($coursesStore.isCourseContentLearn) {
-    coursesStore.setIsCourseContentLearn(false);
-    if ($coursesStore.isCourseContentLearned && activeContentId) {
-      coursesStore.setIsCourseContentLearned(false);
-      coursesStore.asyncSetCourseContent(activeContentId);
-      if (activeCourseId) {
-        coursesStore.asyncSetCourse(activeCourseId);
-      }
+  $effect(() => {
+    if (Object.values($coursesStore.flags).some(Boolean)) {
+      clearMutations();
+      reload();
     }
-  }
-
-  function getEmbedUrl(youtube: string): string {
-    if (!youtube) return "";
-    if (youtube.includes("youtube.com/embed/")) {
-      return youtube;
-    }
-    const match = youtube.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-    if (match && match[1]) {
-      return `https://www.youtube.com/embed/${match[1]}`;
-    }
-    return `https://www.youtube.com/embed/${youtube}`;
-  }
-
-  function handleToggleLearn() {
-    if (!content?.id) return;
-    const newStatus = !content.my_status_finished;
-    coursesStore.asyncSetIsCourseContentLearn(content.id, newStatus);
-  }
-
-  $: contentsList = course?.contents || [];
-  $: currentIndex = contentsList.findIndex((c: CourseContent) => String(c.id) === String(activeContentId));
-  $: prevContent = currentIndex > 0 ? contentsList[currentIndex - 1] : null;
-  $: nextContent = currentIndex >= 0 && currentIndex < contentsList.length - 1 ? contentsList[currentIndex + 1] : null;
-
-  function navigateTo(id: number) {
-    if (activeCourseId) {
-      goto(`/courses/${activeCourseId}/contents/${id}`);
-    }
-  }
+  });
 </script>
 
-<div class="space-y-6 animate-in fade-in duration-300">
-  <!-- Top Navigation Bar -->
-  <div class="flex items-center justify-between gap-4 flex-wrap">
-    <button
-      type="button"
-      data-testid="back-to-course-btn"
-      on:click={() => {
-        if (activeCourseId) {
-          goto(`/courses/${activeCourseId}`);
-        } else {
-          goto("/");
-        }
-      }}
-      class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
-    >
-      <ArrowLeft size={16} />
-      <span>Kembali ke Detail Kursus</span>
-    </button>
+<section class="mx-auto max-w-4xl">
+  <a href={`/courses/${courseId}`} class="inline-flex items-center gap-2 text-sm font-medium text-ink-700 hover:underline">
+    <ArrowLeft size={16} /><span>{course ? course.title : "Kembali ke kursus"}</span>
+  </a>
 
-    {#if content}
-      <button
-        type="button"
-        data-testid="toggle-learn-btn"
-        on:click={handleToggleLearn}
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs {content.my_status_finished ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-600/25'}"
-      >
-        {#if content.my_status_finished}
-          <CheckCircle2 size={16} class="text-emerald-600" />
-          <span>Tandai Belum Selesai</span>
-        {:else}
-          <Circle size={16} />
-          <span>Tandai Sudah Selesai</span>
-        {/if}
-      </button>
+  {#if !content || !course}
+    {#if $coursesStore.error}
+      <p class="mt-6 rounded-xl bg-red-50 p-4 text-red-800" role="alert">{$coursesStore.error}</p>
+    {:else}
+      <p class="mt-6 text-ink-500" role="status">Memuat materi...</p>
     {/if}
-  </div>
-
-  {#if !content}
-    <div class="flex flex-col items-center justify-center py-24 text-slate-400">
-      <LoaderCircle size={36} class="animate-spin text-indigo-600 mb-3" />
-      <p class="text-sm font-medium">Memuat video pembelajaran...</p>
-    </div>
   {:else}
-    <!-- Video Player Container -->
-    <div class="bg-black rounded-3xl overflow-hidden shadow-2xl aspect-video w-full relative">
-      <iframe
-        data-testid="video-iframe"
-        src={getEmbedUrl(content.youtube)}
-        title={content.title}
-        class="w-full h-full border-0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-      ></iframe>
-    </div>
+    <h1 class="mt-4 flex items-center gap-3 text-2xl font-bold">
+      <Video size={24} class="text-ink-500" /><span>{content.title}</span>
+    </h1>
 
-    <!-- Video Info Header Card -->
-    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 mb-1 block">
-            {course?.title || "Materi Pembelajaran"}
-          </span>
-          <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            {content.title}
-          </h1>
+    {#if isOwner || isStudent}
+      {@const videoId = getYoutubeId(content.youtube)}
+      {#if videoId}
+        <div class="mt-6 aspect-video overflow-hidden rounded-2xl bg-ink-900">
+          <iframe
+            class="size-full"
+            src={`https://www.youtube.com/embed/${videoId}`}
+            title={content.title}
+            allow="accelerometer; encrypted-media; picture-in-picture"
+            allowfullscreen
+          ></iframe>
         </div>
+      {:else}
+        <p class="mt-6 rounded-xl bg-red-50 p-4 text-red-800" role="alert">Tautan video tidak valid.</p>
+      {/if}
 
-        {#if content.my_status_finished}
-          <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200/60 self-start sm:self-auto">
-            <CheckCircle2 size={15} />
-            <span>Selesai Dipelajari</span>
-          </div>
-        {/if}
+      {#if isOwner}
+        <p class="mt-4 text-sm text-ink-500">Anda melihat materi ini sebagai pemilik kursus.</p>
+      {:else}
+        <button
+          type="button"
+          class="mt-4 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold {content.my_status_finished
+            ? 'border border-ink-200 hover:bg-ink-50'
+            : 'bg-ink-800 text-white hover:bg-ink-700'}"
+          onclick={() => setContentStatus(content.id, content.my_status_finished ? 0 : 1)}
+        >
+          <Check size={16} />
+          {content.my_status_finished ? "Tandai belum selesai" : "Tandai selesai"}
+        </button>
+      {/if}
+    {:else}
+      <div class="mt-6 flex items-center gap-3 rounded-2xl border border-ink-100 bg-white p-5 text-ink-700">
+        <Lock size={20} />
+        <p>Daftar kursus ini terlebih dahulu untuk menonton materi.</p>
       </div>
-
-      <!-- Playlist / Navigation Buttons (Prev / Next) -->
-      <div class="pt-6 border-t border-slate-100 flex items-center justify-between gap-4 flex-wrap">
-        {#if prevContent}
-          <button
-            type="button"
-            data-testid="prev-content-btn"
-            on:click={() => navigateTo(prevContent.id)}
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
-          >
-            <ChevronLeft size={16} />
-            <span>Sebelumnya: {prevContent.title}</span>
-          </button>
-        {:else}
-          <div></div>
-        {/if}
-
-        {#if nextContent}
-          <button
-            type="button"
-            data-testid="next-content-btn"
-            on:click={() => navigateTo(nextContent.id)}
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm ml-auto"
-          >
-            <span>Selanjutnya: {nextContent.title}</span>
-            <ChevronRight size={16} />
-          </button>
-        {/if}
-      </div>
-    </div>
+    {/if}
   {/if}
-</div>
+</section>

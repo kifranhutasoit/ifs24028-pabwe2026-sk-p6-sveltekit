@@ -2,8 +2,9 @@
   import { page } from "$app/state";
   import ContentPage from "../../../../../features/courses/pages/ContentPage.svelte";
 
-  let courseId = $derived(page.params.courseId);
-  let contentId = $derived(page.params.contentId);
+  const courseId = $derived(page.params.courseId);
+  const contentId = $derived(page.params.contentId);
 </script>
 
-<ContentPage {courseId} {contentId} />
+<svelte:head><title>Materi · Delcom Courses</title></svelte:head>
+<ContentPage courseId={Number(courseId)} contentId={Number(contentId)} />

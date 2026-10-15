@@ -1,142 +1,46 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import RootLayout from "./routes/+layout.svelte";
-import { ssr } from "./routes/+layout";
-import RootPage from "./routes/+page.svelte";
-import RootError from "./routes/+error.svelte";
-import AuthLayout from "./routes/auth/+layout.svelte";
-import LoginPageWrapper from "./routes/auth/login/+page.svelte";
-import RegisterPageWrapper from "./routes/auth/register/+page.svelte";
-import ProfilePageWrapper from "./routes/profile/+page.svelte";
-import CourseDetailPageWrapper from "./routes/courses/[courseId]/+page.svelte";
-import CourseContentPageWrapper from "./routes/courses/[courseId]/contents/[contentId]/+page.svelte";
-import UsersPageWrapper from "./routes/users/+page.svelte";
-import { renderWithProviders } from "./test-utils";
-import { updateMockPage } from "./setupTests";
-import apiHelper from "./helpers/apiHelper";
+import { goto } from "$app/navigation";
+import { render, screen, waitFor } from "@testing-library/svelte";
+import { beforeEach, describe, expect, it } from "vitest";
+import Harness from "./tests/Harness.svelte";
+import LoginRoute from "./routes/auth/login/+page.svelte";
+import HomeRoute from "./routes/+page.svelte";
+import { notify } from "./states/toastStore";
+import { mockFetch, ok, resetStores, setPage, signIn, summary } from "./tests/utils";
 
-describe("SvelteKit Routes and Layouts", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    updateMockPage({
-      url: new URL("http://localhost:3005/"),
-      params: { courseId: "1", contentId: "1" },
-      route: { id: "/" },
-      status: 200,
-      error: null,
-      data: {},
-      form: null,
-    });
+beforeEach(resetStores);
+
+describe("App (layout root)", () => {
+  it("rute /auth tidak memakai layout kursus", () => {
+    setPage("/auth/login");
+    render(Harness, { props: { Page: LoginRoute } });
+    expect(screen.getByRole("heading", { name: "Masuk" })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Navigasi utama" })).toBeNull();
+    expect(screen.queryByLabelText("Menu samping")).toBeNull();
   });
 
-  it("should verify ssr is true in +layout.ts", () => {
-    expect(ssr).toBe(true);
+  it("rute lain dibungkus CourseLayout (navbar, sidebar, isi halaman)", async () => {
+    setPage("/");
+    signIn();
+    mockFetch({ "GET /courses": ok("ok", { courses: [summary()] }) });
+    render(Harness, { props: { Page: HomeRoute } });
+    expect(screen.getByRole("navigation", { name: "Navigasi utama" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Menu samping")).toBeInTheDocument();
+    expect(await screen.findByText("Dasar C")).toBeInTheDocument();
   });
 
-  it("should render RootLayout for non-auth route using CourseLayout", () => {
-    vi.spyOn(apiHelper, "getAccessToken").mockReturnValue("valid-token");
-    const { wrapper } = renderWithProviders(RootLayout, {
-      preloadedState: {
-        profile: { id: 1, name: "Logged User", email: "user@del.org" },
-      },
-    });
-
-    expect(wrapper.text()).toContain("Delcom Courses");
+  it("pengguna tanpa sesi dialihkan ke login dari rute terlindungi", async () => {
+    setPage("/");
+    render(Harness, { props: { Page: HomeRoute } });
+    expect(screen.getByRole("status")).toHaveTextContent("Memuat sesi...");
+    await waitFor(() => expect(goto).toHaveBeenCalledWith("/auth/login"));
   });
 
-  it("should render RootLayout for /auth route directly", async () => {
-    const { wrapper } = renderWithProviders(RootLayout, { route: "/auth/login" });
-    expect(wrapper.text()).not.toContain("Delcom Courses");
-  });
-
-  it("should dynamically switch layout between non-auth and auth route on navigation", async () => {
-    vi.spyOn(apiHelper, "getAccessToken").mockReturnValue("valid-token");
-    const { wrapper } = renderWithProviders(RootLayout, {
-      route: "/",
-      preloadedState: {
-        profile: { id: 1, name: "Logged User", email: "user@del.org" },
-      },
-    });
-
-    expect(wrapper.text()).toContain("Delcom Courses");
-
-    // Navigate to /auth/login (simulating logout)
-    updateMockPage({ url: new URL("http://localhost:3005/auth/login") });
-    await new Promise((r) => setTimeout(r, 0));
-    expect(wrapper.text()).not.toContain("Delcom Courses");
-
-    // Navigate back to / (simulating login)
-    updateMockPage({ url: new URL("http://localhost:3005/") });
-    await new Promise((r) => setTimeout(r, 0));
-    expect(wrapper.text()).toContain("Delcom Courses");
-  });
-
-  it("should render RootPage (+page.svelte)", () => {
-    const { wrapper } = renderWithProviders(RootPage, {
-      preloadedState: {
-        profile: { id: 1, name: "Logged User" },
-        courses: [],
-      },
-    });
-    expect(wrapper.exists()).toBe(true);
-  });
-
-  it("should render RootError (+error.svelte)", () => {
-    const { wrapper } = renderWithProviders(RootError);
-    expect(wrapper.text()).toContain("404");
-    expect(wrapper.text()).toContain("Halaman Tidak Ditemukan");
-  });
-
-  it("should render AuthLayout (routes/auth/+layout.svelte)", () => {
-    const { wrapper } = renderWithProviders(AuthLayout);
-    expect(wrapper.text()).toContain("Delcom Courses");
-  });
-
-  it("should render LoginPageWrapper (routes/auth/login/+page.svelte)", () => {
-    const { wrapper } = renderWithProviders(LoginPageWrapper);
-    expect(wrapper.text()).toContain("Masuk Sekarang");
-  });
-
-  it("should render RegisterPageWrapper (routes/auth/register/+page.svelte)", () => {
-    const { wrapper } = renderWithProviders(RegisterPageWrapper);
-    expect(wrapper.text()).toContain("Daftar Sekarang");
-  });
-
-  it("should render ProfilePageWrapper (routes/profile/+page.svelte)", () => {
-    const { wrapper } = renderWithProviders(ProfilePageWrapper, {
-      preloadedState: {
-        profile: { id: 1, name: "Logged User", email: "user@del.org" },
-      },
-    });
-    expect(wrapper.text()).toContain("Profil Akun");
-  });
-
-  it("should render CourseDetailPageWrapper (routes/courses/[courseId]/+page.svelte)", () => {
-    const { wrapper } = renderWithProviders(CourseDetailPageWrapper, {
-      preloadedState: {
-        profile: { id: 1, name: "Logged User" },
-        course: { id: 1, user_id: 1, title: "Detail Test", description: "Desc" },
-      },
-    });
-    expect(wrapper.text()).toContain("Detail Test");
-  });
-
-  it("should render CourseContentPageWrapper (routes/courses/[courseId]/contents/[contentId]/+page.svelte)", () => {
-    const { wrapper } = renderWithProviders(CourseContentPageWrapper, {
-      preloadedState: {
-        profile: { id: 1, name: "Logged User" },
-        course: { id: 1, user_id: 1, title: "Course 1", description: "Desc" },
-        courseContent: { id: 1, title: "Content Test", youtube: "https://youtu.be/123" },
-      },
-    });
-    expect(wrapper.text()).toContain("Content Test");
-  });
-
-  it("should render UsersPageWrapper (routes/users/+page.svelte)", () => {
-    const { wrapper } = renderWithProviders(UsersPageWrapper, {
-      preloadedState: {
-        users: [{ id: 1, name: "User Satu", email: "satu@del.org" }],
-      },
-    });
-    expect(wrapper.text()).toContain("Semua Pengguna");
+  it("berpindah dari /auth ke rute lain mengganti layout secara reaktif, dan toast tampil", async () => {
+    setPage("/auth/login");
+    render(Harness, { props: { Page: LoginRoute } });
+    setPage("/users");
+    expect(await screen.findByText("Memuat sesi...")).toBeInTheDocument();
+    notify("success", "Halo dari toast", 60_000);
+    expect(await screen.findByText("Halo dari toast")).toBeInTheDocument();
   });
 });

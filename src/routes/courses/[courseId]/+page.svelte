@@ -2,7 +2,8 @@
   import { page } from "$app/state";
   import DetailPage from "../../../features/courses/pages/DetailPage.svelte";
 
-  let courseId = $derived(page.params.courseId);
+  const courseId = $derived(page.params.courseId);
 </script>
 
-<DetailPage {courseId} />
+<svelte:head><title>Detail Kursus · Delcom Courses</title></svelte:head>
+<DetailPage courseId={Number(courseId)} />

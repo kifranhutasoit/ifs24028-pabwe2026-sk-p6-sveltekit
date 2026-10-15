@@ -1,63 +1,33 @@
 import { sveltekit } from "@sveltejs/kit/vite";
-import bunAdapter from "@sveltejs/adapter-bun";
-import vercelAdapter from "@sveltejs/adapter-vercel";
-import tailwindcss from "@tailwindcss/vite";
+import adapter from "@sveltejs/adapter-bun";
 import { svelteTesting } from "@testing-library/svelte/vite";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, loadEnv } from "vite";
-import process from "process";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const port = Number(process.env.APP_PORT || env.APP_PORT) || 3005;
-
-  // Vercel mengisi variabel VERCEL saat build, Jenkins tidak.
-  const isVercel = Boolean(process.env.VERCEL);
+  const port = Number(env.APP_PORT || process.env.APP_PORT || 3005);
 
   return {
-    plugins: [
-      sveltekit({
-        adapter: isVercel
-          ? vercelAdapter()
-          : bunAdapter({
-              envPrefix: "APP_",
-              serverOptions: {
-                port: port,
-              },
-            }),
-        inlineStyleThreshold: 20000,
-      }),
-      tailwindcss(),
-      svelteTesting(),
-    ],
-    server: {
-      port: port,
-    },
-    preview: {
-      port: port,
-    },
-    build: {
-      chunkSizeWarningLimit: 1500,
-    },
-    define: {
-      DELCOM_BASEURL: JSON.stringify(
-        env.VITE_DELCOM_BASEURL || "https://open-api.delcom.org/api/v1"
-      ),
-    },
+    plugins: [tailwindcss(), sveltekit({ adapter: adapter({ out: "build", serverOptions: { port } }) }), svelteTesting()],
+    server: { port, host: true },
+    preview: { port, host: true },
     test: {
-      globals: true,
       environment: "jsdom",
-      setupFiles: "./src/setupTests.ts",
-      include: ["src/**/*.{test,spec}.{js,ts}"],
+      globals: true,
+      setupFiles: ["./src/tests/setup.ts"],
+      include: ["src/**/*.test.ts"],
+      clearMocks: true,
+      unstubEnvs: true,
+      unstubGlobals: true,
       coverage: {
         provider: "v8",
-        reporter: ["text", "json", "html"],
+        reporter: ["text", "html", "lcov"],
         include: ["src/**/*.{ts,svelte}"],
         exclude: [
-          "node_modules/",
-          "src/setupTests.ts",
-          "src/test-utils.ts",
-          "src/routes/**/+error.svelte",
-          "**/*.d.ts",
+          "src/**/*.test.ts",
+          "src/tests/**",
+          "src/**/*.d.ts",
         ],
         thresholds: {
           statements: 100,

@@ -1,27 +1,19 @@
-export default function useInput(defaultValue: string = ""): [
-  { value: string },
-  (event: any) => void,
-  (v: string) => void
-] {
-  let val = defaultValue;
-  const value = {
-    get value() {
-      return val;
-    },
-    set value(v: string) {
-      val = v;
-    },
-  };
+import { writable, type Writable } from "svelte/store";
 
-  function handleValueChange(event: any) {
-    value.value = event?.target?.value !== undefined ? event.target.value : event;
-  }
+export interface UseInput {
+  value: Writable<string>;
+  onInput: (event: Event) => void;
+  set: (next: string) => void;
+  reset: () => void;
+}
 
-  return [
+/** Hook sederhana untuk mengelola nilai input formulir sebagai store. */
+export function useInput(initial = ""): UseInput {
+  const value = writable(initial);
+  return {
     value,
-    handleValueChange,
-    (v: string) => {
-      value.value = v;
-    },
-  ];
+    onInput: (event) => value.set((event.target as HTMLInputElement).value),
+    set: (next) => value.set(next),
+    reset: () => value.set(initial),
+  };
 }

@@ -1,9 +1,6 @@
 node_modules
-.svelte-kit
-build
-dist
-.env
-.env.*
-!.env.example
-coverage
+/build
+/.svelte-kit
+/coverage
 .DS_Store
+.env.local

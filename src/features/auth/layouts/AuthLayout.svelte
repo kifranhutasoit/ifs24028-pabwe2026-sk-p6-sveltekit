@@ -1,56 +1,43 @@
 <script lang="ts">
-  import { onMount, type Snippet } from "svelte";
-  import { page } from "$app/state";
-  import { GraduationCap } from "lucide-svelte";
-  import { usersStore } from "../../users/states/usersStore";
-  import apiHelper from "../../../helpers/apiHelper";
-  import AuthSessionRedirect from "./AuthSessionRedirect.svelte";
+  import { BookOpen, PlayCircle, Star } from "lucide-svelte";
+  import type { Snippet } from "svelte";
+  import Logo from "../../../components/Logo.svelte";
 
-  let { children }: { children?: Snippet } = $props();
-  let isLoginActive = $derived(page.url.pathname === "/auth/login");
-
-  onMount(() => {
-    const authToken = apiHelper.getAccessToken();
-    if (authToken) {
-      usersStore.asyncSetProfile();
-    }
-  });
+  let {
+    title,
+    subtitle,
+    children,
+    footer,
+  }: { title: string; subtitle: string; children: Snippet; footer?: Snippet } = $props();
 </script>
 
-<AuthSessionRedirect />
-
-<main class="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/40 to-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-  <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-    <div class="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 items-center justify-center text-white shadow-xl shadow-indigo-500/25 mb-3">
-      <GraduationCap size={32} strokeWidth={2.5} />
+<div class="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+  <section class="hidden flex-col justify-between bg-ink-800 p-12 text-white lg:flex">
+    <Logo dark />
+    <div class="max-w-md">
+      <h2 class="text-3xl leading-tight font-bold">Belajar lewat video, kapan saja.</h2>
+      <p class="mt-4 text-ink-200">
+        Delcom Courses adalah tempat membuat dan mengikuti kursus. Pengajar menyusun materi dari
+        video YouTube, peserta mendaftar, menandai materi yang selesai, lalu memberi rating.
+      </p>
+      <ul class="mt-8 space-y-3 text-sm text-ink-100">
+        <li class="flex items-center gap-3"><BookOpen size={18} class="text-tassel-400" /> Temukan kursus dari pengguna lain</li>
+        <li class="flex items-center gap-3"><PlayCircle size={18} class="text-tassel-400" /> Ikuti materi video secara berurutan</li>
+        <li class="flex items-center gap-3"><Star size={18} class="text-tassel-400" /> Beri rating setelah selesai belajar</li>
+      </ul>
     </div>
-    <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
-      Delcom Courses
-    </h1>
-    <p class="mt-1 text-sm text-slate-600">
-      Aplikasi Pengelola Kursus & Pembelajaran Modern (SvelteKit)
-    </p>
-  </div>
+    <p class="text-xs text-ink-300">Delcom Courses &middot; Praktikum PABWE 2026</p>
+  </section>
 
-  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-    <div class="bg-white py-8 px-6 sm:px-10 shadow-xl shadow-slate-200/50 rounded-3xl border border-slate-100">
-      <!-- Tabs -->
-      <div class="flex rounded-2xl bg-slate-100 p-1 mb-6">
-        <a
-          href="/auth/login"
-          class="flex-1 py-2 text-center text-sm font-semibold rounded-xl transition-all {isLoginActive ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'}"
-        >
-          Masuk Akun
-        </a>
-        <a
-          href="/auth/register"
-          class="flex-1 py-2 text-center text-sm font-semibold rounded-xl transition-all {!isLoginActive ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'}"
-        >
-          Daftar Baru
-        </a>
-      </div>
-
-      {@render children?.()}
+  <main class="flex items-center justify-center p-6 sm:p-12">
+    <div class="w-full max-w-sm">
+      <div class="mb-8 lg:hidden"><Logo /></div>
+      <h1 class="text-2xl font-bold">{title}</h1>
+      <p class="mt-1 mb-6 text-sm text-ink-500">{subtitle}</p>
+      {@render children()}
+      {#if footer}
+        <p class="mt-6 text-center text-sm text-ink-500">{@render footer()}</p>
+      {/if}
     </div>
-  </div>
-</main>
+  </main>
+</div>

@@ -1,70 +1,50 @@
-import Swal from "sweetalert2";
+import { getBaseUrl } from "./apiHelper";
 
-export function showErrorDialog(message: string) {
-  return Swal.fire({
-    title: "Terjadi Kesalahan",
-    text: message,
-    icon: "error",
-    confirmButtonText: "Tutup",
-    confirmButtonColor: "#ef4444",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      Swal.close();
-    }
-    return result;
-  });
+export function formatDate(iso?: string | null): string {
+  if (!iso) return "-";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 }
 
-export function showWarningDialog(message: string) {
-  return Swal.fire({
-    title: "Peringatan",
-    text: message,
-    icon: "warning",
-    confirmButtonText: "Tutup",
-    confirmButtonColor: "#f59e0b",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      Swal.close();
-    }
-    return result;
-  });
+export function getYoutubeId(url: string): string | null {
+  const pattern =
+    /^(?:https?:\/\/)?(?:www\.|m\.)?(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})(?:[?&#/].*)?$/;
+  return pattern.exec(url.trim())?.[1] ?? null;
 }
 
-export function showSuccessDialog(message: string) {
-  return Swal.fire({
-    title: "Tindakan Berhasil",
-    text: message,
-    icon: "success",
-    confirmButtonText: "Tutup",
-    confirmButtonColor: "#10b981",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      Swal.close();
-    }
-    return result;
-  });
+export function formatRating(value?: string | number | null): string {
+  if (value === null || value === undefined || value === "") return "Belum ada rating";
+  const number = Number(value);
+  return Number.isNaN(number) ? "Belum ada rating" : number.toFixed(1);
 }
 
-export function showConfirmDialog(message: string) {
-  return Swal.fire({
-    title: "Konfirmasi",
-    text: message,
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonText: "Ya",
-    cancelButtonText: "Tidak",
-    confirmButtonColor: "#6366f1",
-    cancelButtonColor: "#94a3b8",
-  });
+export function formatPercent(value?: string | number | null): number {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.min(100, Math.max(0, Math.round(number))) : 0;
 }
 
-export function formatDate(date: string | number | Date | null | undefined): string {
-  if (!date) return "-";
-  return new Date(date).toLocaleString("id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+export function confirmAction(message: string): boolean {
+  return window.confirm(message);
+}
+
+export function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join("");
+}
+
+/** Foto profil dapat berupa URL penuh atau jalur relatif (mis. `img/profile/1.png`). */
+export function resolveAsset(path?: string | null): string {
+  if (!path) return "";
+  if (/^https?:\/\//.test(path)) return path;
+  return `${new URL(getBaseUrl()).origin}/${path.replace(/^\/+/, "")}`;
+}
+
+export function matchesQuery(query: string, ...fields: string[]): boolean {
+  const needle = query.trim().toLowerCase();
+  return needle === "" || fields.some((field) => field.toLowerCase().includes(needle));
 }

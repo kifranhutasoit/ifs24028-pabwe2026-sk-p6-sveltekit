@@ -1,75 +1,28 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import NavbarComponent from "../components/NavbarComponent.svelte";
-  import SidebarComponent from "../components/SidebarComponent.svelte";
-  import { usersStore } from "../../users/states/usersStore";
-  import { authStore } from "../../auth/states/authStore";
-  import apiHelper from "../../../helpers/apiHelper";
-  import { goto } from "$app/navigation";
+  import type { Snippet } from "svelte";
+  import Navbar from "../../../components/Navbar.svelte";
+  import Sidebar from "../../../components/Sidebar.svelte";
+  import AuthSessionRedirect from "../../auth/components/AuthSessionRedirect.svelte";
+  import { authStore, loadProfile } from "../../auth/states/authStore";
 
-  let isSidebarOpen: boolean = false;
+  let { children }: { children: Snippet } = $props();
+  let menuOpen = $state(false);
 
-  $: profile = $usersStore.profile;
-
-  // 1. Jalankan sekali untuk mengecek apakah pengguna sudah login
-  onMount(() => {
-    const authToken = apiHelper.getAccessToken();
-    if (authToken) {
-      usersStore.asyncSetProfile();
-    } else {
-      goto("/auth/login");
-    }
+  $effect(() => {
+    if ($authStore.token && !$authStore.profile && !$authStore.loading) void loadProfile();
   });
-
-  // 2. Jika proses pengambilan profil selesai dan tidak ada profile, arahkan ke login
-  $: if ($usersStore.isProfile) {
-    usersStore.setIsProfile(false);
-    if (!profile) {
-      apiHelper.putAccessToken("");
-      goto("/auth/login");
-    }
-  }
-
-  // 3. Efek setelah logout
-  $: if ($authStore.isAuthLogout) {
-    authStore.setIsAuthLogout(false);
-    usersStore.setProfile(null);
-    goto("/auth/login");
-  }
-
-  function handleLogout() {
-    authStore.asyncSetIsAuthLogout();
-  }
 </script>
 
-{#if !profile}
-  <div class="min-h-screen flex items-center justify-center bg-slate-50">
-    <div class="flex flex-col items-center gap-3">
-      <div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-      <p class="text-sm font-medium text-slate-600">Memuat sesi pengguna...</p>
+<AuthSessionRedirect mode="protected" />
+
+{#if $authStore.profile}
+  <div class="min-h-screen">
+    <Navbar onmenu={() => (menuOpen = !menuOpen)} />
+    <div class="lg:flex">
+      <Sidebar open={menuOpen} onnavigate={() => (menuOpen = false)} />
+      <main class="min-w-0 flex-1 p-4 sm:p-8">{@render children()}</main>
     </div>
   </div>
 {:else}
-  <div class="min-h-screen bg-slate-50 text-slate-800">
-    <NavbarComponent
-      {profile}
-      {isSidebarOpen}
-      onLogout={handleLogout}
-      onToggleSidebar={() => (isSidebarOpen = !isSidebarOpen)}
-      on:logout={handleLogout}
-      on:toggle-sidebar={() => (isSidebarOpen = !isSidebarOpen)}
-    />
-
-    <SidebarComponent
-      {isSidebarOpen}
-      onCloseMobile={() => (isSidebarOpen = false)}
-      on:close-mobile={() => (isSidebarOpen = false)}
-    />
-
-    <main class="pt-16 md:pl-64 transition-all">
-      <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-        <slot />
-      </div>
-    </main>
-  </div>
+  <p class="grid min-h-screen place-items-center text-ink-500" role="status">Memuat sesi...</p>
 {/if}
