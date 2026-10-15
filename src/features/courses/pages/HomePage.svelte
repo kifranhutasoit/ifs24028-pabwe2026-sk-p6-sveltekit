@@ -113,7 +113,7 @@
           type="button"
           data-testid="delete-all-courses-btn"
           on:click={handleDeleteAllCourses}
-          class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl font-semibold text-sm text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-all"
+          class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl font-semibold text-sm text-red-700 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-all"
         >
           <Trash2 size={16} />
           <span>Hapus Semua</span>
@@ -135,7 +135,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Total Kursus
           </p>
           <h3 class="text-3xl font-black text-slate-800 mt-1">{totalCount}</h3>
@@ -147,7 +147,7 @@
 
       <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Kursus Saya
           </p>
           <h3 class="text-3xl font-black text-indigo-600 mt-1">{myCoursesCount}</h3>
@@ -159,7 +159,7 @@
 
       <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Diikuti
           </p>
           <h3 class="text-3xl font-black text-emerald-600 mt-1">{enrolledCount}</h3>
@@ -188,6 +188,7 @@
       <div class="flex items-center gap-3 w-full sm:w-auto">
         <select
           data-testid="course-filter-select"
+          aria-label="Filter kursus"
           bind:value={filter}
           class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
         >
