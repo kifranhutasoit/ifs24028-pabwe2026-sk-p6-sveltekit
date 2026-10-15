@@ -13,6 +13,12 @@
   });
 </script>
 
+<svelte:head>
+  {#if !$authStore.profile}
+    <title>Memuat sesi · Delcom Courses</title>
+  {/if}
+</svelte:head>
+
 <AuthSessionRedirect mode="protected" />
 
 {#if $authStore.profile}
@@ -20,9 +26,12 @@
     <Navbar onmenu={() => (menuOpen = !menuOpen)} />
     <div class="lg:flex">
       <Sidebar open={menuOpen} onnavigate={() => (menuOpen = false)} />
-      <main class="min-w-0 flex-1 p-4 sm:p-8">{@render children()}</main>
+      <main id="main-content" class="min-w-0 flex-1 p-4 sm:p-8">{@render children()}</main>
     </div>
   </div>
 {:else}
-  <p class="grid min-h-screen place-items-center text-ink-500" role="status">Memuat sesi...</p>
+  <main id="main-content" class="grid min-h-screen place-items-center">
+    <h1 class="sr-only">Delcom Courses</h1>
+    <p class="text-ink-500" role="status">Memuat sesi...</p>
+  </main>
 {/if}
