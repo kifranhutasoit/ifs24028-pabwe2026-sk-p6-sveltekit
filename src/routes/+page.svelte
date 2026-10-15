@@ -1,15 +1,6 @@
 <script lang="ts">
-  import AuthLayout from "$lib/features/auth/layouts/AuthLayout.svelte"; // sesuaikan path
-  // ... form logic
+  import HomePage from "../features/courses/pages/HomePage.svelte";
 </script>
 
-<AuthLayout title="Masuk" subtitle="Lanjutkan belajar dari kursus terakhir Anda.">
-  <!-- HANYA form di sini -->
-  <form>
-    ...
-  </form>
-
-  {#snippet footer()}
-    Belum punya akun? <a href="/auth/register">Daftar</a>
-  {/snippet}
-</AuthLayout>
+<svelte:head><title>Semua Kursus · Delcom Courses</title></svelte:head>
+<HomePage />bun run build
