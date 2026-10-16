@@ -17,10 +17,9 @@
 {:else}
   <span
     class={`grid place-items-center rounded-full bg-ink-100 font-semibold text-ink-700 ${sizes[size]}`}
-    role={alt ? "img" : undefined}
-    aria-label={alt || undefined}
-    aria-hidden={alt ? undefined : "true"}
+    role="img"
+    aria-label={name}
   >
     {initials(name)}
-  </span> 
+  </span>
 {/if}
