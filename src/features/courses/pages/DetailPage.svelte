@@ -205,10 +205,12 @@
                 type="button"
                 aria-label={`Beri rating ${value}`}
                 aria-pressed={rating === value}
-                class="rounded-lg p-1 {value <= rating ? 'text-tassel-500' : 'text-ink-300'}"
+                class="rounded-lg p-1 {value <= rating
+                  ? 'text-tassel-500 [&_svg]:fill-current'
+                  : 'text-ink-300 [&_svg]:fill-none'}"
                 onclick={() => (rating = value)}
               >
-                <Star size={24} fill={value <= rating ? "currentColor" : "none"} />
+                <Star size={24} />
               </button>
             {/each}
           </div>
