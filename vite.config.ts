@@ -71,6 +71,7 @@ export default defineConfig(({ mode }) => {
           "src/setupTests.ts",
           "src/test-utils.ts",
           "src/tests/**",
+          "src/features/**/types.ts",
           "src/routes/**/+error.svelte",
           "src/routes/**/+server.ts",
           "**/*.d.ts",
