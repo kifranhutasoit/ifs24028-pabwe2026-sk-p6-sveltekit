@@ -2,6 +2,7 @@ import "@testing-library/jest-dom";
 import { vi, afterEach } from "vitest";
 import { cleanup } from "@testing-library/svelte";
 import { writable } from "svelte/store";
+import { untrack } from "svelte";
 
 afterEach(() => {
   cleanup();
@@ -49,47 +50,54 @@ if (typeof (globalThis as any).DELCOM_BASEURL === "undefined") {
 import * as $ from "svelte/internal/client";
 
 function DummyIcon(anchor: any, props: any) {
-  let el: HTMLElement | null = null;
+  let el: Element | null = null;
   if (typeof document !== "undefined") {
-    el = document.createElement("span");
+    el = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     el.setAttribute("data-testid", "icon");
     if (anchor && anchor.parentNode) {
       anchor.parentNode.insertBefore(el, anchor);
     }
   }
+  const apply = () => {
+    if (!el || !props) return;
+    for (const key of Object.getOwnPropertyNames(props)) {
+      if (key !== "class" && key !== "role" && !key.startsWith("aria-")) continue;
+      const val = props[key];
+      if (val === undefined || val === null || val === false) {
+        el.removeAttribute(key);
+      } else {
+        el.setAttribute(key, String(val));
+      }
+    }
+  };
   if (props) {
     try {
-      ($.render_effect as any)(() => {
-        for (const key of Object.getOwnPropertyNames(props)) {
-          const val = props[key];
-          if (el && key === "class" && val) {
-            el.className = String(val);
-          }
-        }
-      });
+      ($.render_effect as any)(apply);
     } catch {
-      for (const key of Object.getOwnPropertyNames(props)) {
-        try {
-          const val = props[key];
-          if (el && key === "class" && val) el.className = String(val);
-        } catch {}
-      }
+      try {
+        apply();
+      } catch {}
     }
   }
   return {};
 }
 
-vi.mock("lucide-svelte", async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, any>;
-  const mocked: Record<string, any> = {};
-  for (const key of Object.keys(actual)) {
-    mocked[key] = DummyIcon;
-  }
-  return {
-    ...actual,
-    ...mocked,
-    default: mocked,
-  };
+// Semua ikon lucide-svelte diganti DummyIcon tanpa memuat pustaka aslinya
+// (sebelumnya memakai importOriginal(), yang memuat seluruh pustaka ikon
+// pada setiap file tes dan membuat tes lambat).
+vi.mock("lucide-svelte", () => {
+  const iconModule: any = new Proxy(
+    {},
+    {
+      has: () => true,
+      get: (_target, prop) => {
+        if (prop === "__esModule" || prop === "then") return undefined;
+        if (prop === "default") return iconModule;
+        return DummyIcon;
+      },
+    }
+  );
+  return iconModule;
 });
 
 vi.mock("@toast-ui/editor", () => {
@@ -201,15 +209,17 @@ export const mockPageStore = writable({
 });
 
 export function updateMockPage(data: Partial<typeof mockPageState>) {
-  Object.assign(mockPageState, data);
-  mockPageStore.set({
-    url: mockPageState.url,
-    params: mockPageState.params,
-    route: mockPageState.route,
-    status: mockPageState.status,
-    error: mockPageState.error,
-    data: mockPageState.data,
-    form: mockPageState.form,
+  untrack(() => {
+    Object.assign(mockPageState, data);
+    mockPageStore.set({
+      url: mockPageState.url,
+      params: mockPageState.params,
+      route: mockPageState.route,
+      status: mockPageState.status,
+      error: mockPageState.error,
+      data: mockPageState.data,
+      form: mockPageState.form,
+    });
   });
 }
 
