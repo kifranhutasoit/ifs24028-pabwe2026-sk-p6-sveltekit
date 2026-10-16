@@ -49,6 +49,13 @@ export default defineConfig(({ mode }) => {
       DELCOM_BASEURL: JSON.stringify(
         env.VITE_DELCOM_BASEURL || "https://open-api.delcom.org/api/v1"
       ),
+      ...(mode === "test"
+        ? {
+            "import.meta.env.VITE_DELCOM_BASEURL": JSON.stringify(
+              "https://open-api.delcom.org/api/v1"
+            ),
+          }
+        : {}),
     },
     test: {
       globals: true,
@@ -63,7 +70,9 @@ export default defineConfig(({ mode }) => {
           "node_modules/",
           "src/setupTests.ts",
           "src/test-utils.ts",
+          "src/tests/**",
           "src/routes/**/+error.svelte",
+          "src/routes/**/+server.ts",
           "**/*.d.ts",
         ],
         thresholds: {

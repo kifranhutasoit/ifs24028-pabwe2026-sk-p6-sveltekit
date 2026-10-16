@@ -68,7 +68,8 @@ type Handler = unknown | ((call: RecordedCall) => unknown);
 export function mockFetch(routes: Record<string, Handler>) {
   const calls: RecordedCall[] = [];
   const fn = vi.fn(async (input: string, init: RequestInit = {}) => {
-    const url = new URL(input);
+    // Base URL bisa absolut (https://...) atau relatif (/api/v1), tergantung .env.
+    const url = new URL(input, "http://localhost");
     const call: RecordedCall = {
       method: init.method ?? "GET",
       path: url.pathname.replace("/api/v1", ""),

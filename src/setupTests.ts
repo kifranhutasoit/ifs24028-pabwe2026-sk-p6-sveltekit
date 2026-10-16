@@ -1,11 +1,17 @@
 import "@testing-library/jest-dom";
-import { vi, afterEach } from "vitest";
+import { vi, afterEach, beforeEach } from "vitest";
 import { cleanup } from "@testing-library/svelte";
 import { writable } from "svelte/store";
 import { untrack } from "svelte";
 
 afterEach(() => {
   cleanup();
+});
+
+// Base URL absolut untuk semua test, dipasang ulang sebelum tiap test
+// karena vi.unstubAllEnvs() di test mana pun akan menghapus stub.
+beforeEach(() => {
+  vi.stubEnv("VITE_DELCOM_BASEURL", "https://open-api.delcom.org/api/v1");
 });
 
 if (typeof document !== "undefined") {
@@ -82,9 +88,7 @@ function DummyIcon(anchor: any, props: any) {
   return {};
 }
 
-// Semua ikon lucide-svelte diganti DummyIcon tanpa memuat pustaka aslinya
-// (sebelumnya memakai importOriginal(), yang memuat seluruh pustaka ikon
-// pada setiap file tes dan membuat tes lambat).
+// Semua ikon lucide-svelte diganti DummyIcon tanpa memuat pustaka aslinya.
 vi.mock("lucide-svelte", () => {
   const iconModule: any = new Proxy(
     {},
