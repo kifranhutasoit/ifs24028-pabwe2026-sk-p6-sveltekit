@@ -1,8 +1,8 @@
-   {
-     "rewrites": [
-       {
-         "source": "/api/:path*",
-         "destination": "https://open-api.delcom.org/api/v1/:path*"
-       }
-     ]
-   }
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://open-api.delcom.org/api/v1/:path*"
+    }
+  ]
+}
