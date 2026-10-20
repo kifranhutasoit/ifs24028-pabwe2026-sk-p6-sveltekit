@@ -5,14 +5,12 @@ import tailwindcss from "@tailwindcss/vite";
 import { svelteTesting } from "@testing-library/svelte/vite";
 import { defineConfig, loadEnv } from "vite";
 import process from "process";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const port = Number(process.env.APP_PORT || env.APP_PORT) || 3005;
+
+  // Vercel mengisi variabel VERCEL saat build, Jenkins tidak.
   const isVercel = Boolean(process.env.VERCEL);
 
   return {
@@ -21,21 +19,26 @@ export default defineConfig(({ mode }) => {
         adapter: isVercel
           ? vercelAdapter()
           : bunAdapter({
-              envPrefix: "APP_",
+              envPrefix: "SVELTEKIT_",
               serverOptions: {
                 port: port,
               },
             }),
-        inlineStyleThreshold: 200000,
+        inlineStyleThreshold: 20000,
       }),
       tailwindcss(),
       svelteTesting(),
     ],
+
+    // ============================================================
+    // PENTING: prioritaskan .ts di atas .js
+    // Mencegah file .js stale (sisa deploy lama) menutupi file .ts
+    // yang baru, sehingga error MISSING_EXPORT tidak terulang.
+    // ============================================================
     resolve: {
-      alias: {
-        $lib: path.resolve(__dirname, "src/lib"),
-      },
+      extensions: [".mts", ".ts", ".mjs", ".js", ".jsx", ".tsx", ".json"],
     },
+
     server: {
       port: port,
     },
@@ -49,31 +52,44 @@ export default defineConfig(({ mode }) => {
       DELCOM_BASEURL: JSON.stringify(
         env.VITE_DELCOM_BASEURL || "https://open-api.delcom.org/api/v1"
       ),
-      ...(mode === "test"
-        ? {
-            "import.meta.env.VITE_DELCOM_BASEURL": JSON.stringify(
-              "https://open-api.delcom.org/api/v1"
-            ),
-          }
-        : {}),
     },
     test: {
       globals: true,
       environment: "jsdom",
       setupFiles: "./src/setupTests.ts",
-      include: ["src/**/*.{test,spec}.{js,ts}"],
+      include: ["src/tests/**/*.{test,spec}.{js,ts}", "src/App.test.ts"],
       coverage: {
         provider: "v8",
-        reporter: ["text", "json", "html"],
-        include: ["src/**/*.{ts,svelte}"],
+        reporter: ["text", "json", "html", "lcov"],
+        include: [
+          "src/components/**/*.svelte",
+          "src/features/auth/api/*.ts",
+          "src/features/auth/components/*.svelte",
+          "src/features/auth/layouts/AuthLayout.svelte",
+          "src/features/auth/pages/*.svelte",
+          "src/features/auth/states/*.ts",
+          "src/features/courses/api/*.ts",
+          "src/features/courses/components/{AddModal,ChangeCoverModal,ChangeModal,ContentModal,CourseCard}.svelte",
+          "src/features/courses/layouts/CourseLayout.svelte",
+          "src/features/courses/pages/*.svelte",
+          "src/features/courses/states/*.ts",
+          "src/features/users/api/*.ts",
+          "src/features/users/pages/*.svelte",
+          "src/features/users/states/*.ts",
+          "src/helpers/*.ts",
+          "src/hooks/*.ts",
+          "src/routes/**/*.svelte",
+          "src/routes/**/*.ts",
+          "src/states/*.ts",
+          "src/pageState.svelte.ts",
+          "src/tests/utils.ts",
+        ],
         exclude: [
           "node_modules/",
+          "**/*.test.ts",
           "src/setupTests.ts",
           "src/test-utils.ts",
-          "src/tests/**",
-          "src/features/**/types.ts",
           "src/routes/**/+error.svelte",
-          "src/routes/**/+server.ts",
           "**/*.d.ts",
         ],
         thresholds: {

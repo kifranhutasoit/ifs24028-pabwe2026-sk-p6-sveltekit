@@ -11,9 +11,13 @@ import {
 import { fail, mockFetch, ok } from "../utils";
 
 describe("token & base url", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   it("membaca base url dari env dan menghapus garis miring akhir", () => {
     expect(getBaseUrl()).toBe("https://open-api.delcom.org/api/v1");
     vi.stubEnv("VITE_DELCOM_BASEURL", "https://x.test/api/");
+    expect(getBaseUrl()).toBe("https://x.test/api");
+    vi.stubEnv("VITE_DELCOM_BASEURL", "https://x.test/api////");
     expect(getBaseUrl()).toBe("https://x.test/api");
   });
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { LogOut, Menu } from "lucide-svelte";
-  import { authStore, logout } from "../features/auth/states/authStore";
+  import { authStore, logout } from "../features/auth/states/authState";
   import Avatar from "./Avatar.svelte";
   import Logo from "./Logo.svelte";
 
@@ -25,8 +25,8 @@
     <div class="flex items-center gap-3">
       {#if profile}
         <a href="/profile" class="flex items-center gap-2.5 rounded-full py-1 pr-3 pl-1 hover:bg-ink-50">
-          <Avatar name={profile.name} src={profile.photo} size="sm" alt="" />
-          <span class="sr-only text-sm font-medium sm:not-sr-only">{profile.name}</span>
+          <Avatar name={profile.name} src={profile.photo} size="sm" />
+          <span class="hidden text-sm font-medium sm:inline">{profile.name}</span>
         </a>
       {/if}
       <button

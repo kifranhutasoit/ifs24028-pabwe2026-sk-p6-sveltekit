@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import { page } from "$app/state";
-import { authStore } from "../features/auth/states/authStore";
+import { authStore } from "../features/auth/states/authState";
 import { resetCoursesState } from "../features/courses/states/coursesStore";
 import type { CourseContent, CourseDetail, CourseSummary } from "../features/courses/types";
 import { usersStore } from "../features/users/states/usersStore";
@@ -62,14 +62,13 @@ export interface RecordedCall {
   body: any;
   headers: Record<string, string>;
 }
-type Handler = unknown | ((call: RecordedCall) => unknown);
+type Handler = Record<string, unknown> | ((call: RecordedCall) => unknown);
 
 /** Mengganti `fetch` global dengan penanggap berbasis "METHOD /path". */
 export function mockFetch(routes: Record<string, Handler>) {
   const calls: RecordedCall[] = [];
   const fn = vi.fn(async (input: string, init: RequestInit = {}) => {
-    // Base URL bisa absolut (https://...) atau relatif (/api/v1), tergantung .env.
-    const url = new URL(input, "http://localhost");
+    const url = new URL(input);
     const call: RecordedCall = {
       method: init.method ?? "GET",
       path: url.pathname.replace("/api/v1", ""),
@@ -79,12 +78,14 @@ export function mockFetch(routes: Record<string, Handler>) {
     };
     calls.push(call);
     const handler = routes[`${call.method} ${call.path}`];
-    const payload =
-      handler === undefined
-        ? fail(`Tidak ada mock untuk ${call.method} ${call.path}`)
-        : typeof handler === "function"
-          ? await (handler as (c: RecordedCall) => unknown)(call)
-          : handler;
+    let payload: unknown;
+    if (handler === undefined) {
+      payload = fail(`Tidak ada mock untuk ${call.method} ${call.path}`);
+    } else if (typeof handler === "function") {
+      payload = await handler(call);
+    } else {
+      payload = handler;
+    }
     return new Response(JSON.stringify(payload), {
       status: 200,
       headers: { "Content-Type": "application/json" },

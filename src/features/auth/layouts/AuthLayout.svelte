@@ -15,7 +15,7 @@
   <aside aria-label="Tentang Delcom Courses" class="hidden flex-col justify-between bg-ink-800 p-12 text-white lg:flex">
     <Logo dark />
     <div class="max-w-md">
-      <p class="text-3xl leading-tight font-bold">Belajar lewat video, kapan saja.</p>
+      <h2 class="text-3xl leading-tight font-bold">Belajar lewat video, kapan saja.</h2>
       <p class="mt-4 text-ink-200">
         Delcom Courses adalah tempat membuat dan mengikuti kursus. Pengajar menyusun materi dari
         video YouTube, peserta mendaftar, menandai materi yang selesai, lalu memberi rating.

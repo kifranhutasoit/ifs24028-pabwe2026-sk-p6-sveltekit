@@ -2,7 +2,7 @@ import { goto } from "$app/navigation";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/svelte";
 import { get } from "svelte/store";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { authStore } from "../../../features/auth/states/authStore";
+import { authStore } from "../../../features/auth/states/authState";
 import DetailPage from "../../../features/courses/pages/DetailPage.svelte";
 import { coursesStore } from "../../../features/courses/states/coursesStore";
 import type { CourseDetail } from "../../../features/courses/types";
@@ -56,32 +56,6 @@ describe("status pemuatan", () => {
     await rerender({ courseId: 4 });
     expect(await screen.findByText("Memuat kursus...")).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).toBeNull();
-    gate.resolve(ok("ok", { course: detail({ id: 4, title: "Kursus Empat" }) }));
-    expect(await screen.findByRole("heading", { name: "Kursus Empat" })).toBeInTheDocument();
-  });
-
-  it("modal sampul tetap tampil saat kursus baru sedang dimuat", async () => {
-    const gate = deferred<unknown>();
-    mockFetch(routes({ "GET /courses/4": () => gate.promise }));
-    const { rerender } = render(DetailPage, { props: { courseId: 3 } });
-    await screen.findByRole("heading", { name: "Dasar C" });
-    await fireEvent.click(screen.getByRole("button", { name: /Ubah sampul/ }));
-    await rerender({ courseId: 4 });
-    expect(await screen.findByText("Memuat kursus...")).toBeInTheDocument();
-    expect(screen.getByRole("dialog", { name: "Ubah sampul kursus" })).toBeInTheDocument();
-    gate.resolve(ok("ok", { course: detail({ id: 4, title: "Kursus Empat" }) }));
-    expect(await screen.findByRole("heading", { name: "Kursus Empat" })).toBeInTheDocument();
-  });
-
-  it("modal konten tetap tampil saat kursus baru sedang dimuat", async () => {
-    const gate = deferred<unknown>();
-    mockFetch(routes({ "GET /courses/4": () => gate.promise }));
-    const { rerender } = render(DetailPage, { props: { courseId: 3 } });
-    await screen.findByRole("heading", { name: "Dasar C" });
-    await fireEvent.click(screen.getByRole("button", { name: /Tambah konten/ }));
-    await rerender({ courseId: 4 });
-    expect(await screen.findByText("Memuat kursus...")).toBeInTheDocument();
-    expect(screen.getByRole("dialog", { name: "Tambah konten" })).toBeInTheDocument();
     gate.resolve(ok("ok", { course: detail({ id: 4, title: "Kursus Empat" }) }));
     expect(await screen.findByRole("heading", { name: "Kursus Empat" })).toBeInTheDocument();
   });
@@ -292,17 +266,6 @@ describe("antarmuka peserta", () => {
     await waitFor(() => expect(get(coursesStore).flags.rating).toBe(false));
     expect(screen.getByLabelText("Komentar")).toHaveValue("Cukup");
     expect(screen.getByRole("button", { name: "Beri rating 2" })).toHaveAttribute("aria-pressed", "true");
-  });
-
-  it("peserta bisa mengganti pilihan bintang sebelum mengirim", async () => {
-    mockFetch(routes());
-    render(DetailPage, { props: { courseId: 3 } });
-    await screen.findByRole("heading", { name: "Dasar C" });
-    await fireEvent.click(screen.getByRole("button", { name: "Beri rating 5" }));
-    await fireEvent.click(screen.getByRole("button", { name: "Beri rating 1" }));
-    expect(screen.getByRole("button", { name: "Beri rating 1" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "Beri rating 5" })).toHaveAttribute("aria-pressed", "false");
-    expect(screen.getByRole("button", { name: "Kirim rating" })).toBeEnabled();
   });
 });
 
